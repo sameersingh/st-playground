@@ -8,6 +8,7 @@ import json
 
 st.title('Test Streamlit')
 
+st.header('Masked LMs')
 @st.cache
 def fill(model, text):
     unmasker = pipeline('fill-mask', model=model)
@@ -20,9 +21,10 @@ text = st.text_input("Masked text", "i really like [MASK].")
 if st.button('Fill'):
     st.table(fill(model, text))
 
+st.header('Data Exploration')
 dataset = load_dataset("sst")
 
-left_col, right_col = st.beta_columns([2,1])
+left_col, right_col = st.beta_columns([1,1])
 
 with left_col:
     label_counts = {True: {}, False: {}}
@@ -53,8 +55,9 @@ with right_col:
     st.bar_chart(label_counts)
     # st.table(all_insts)    
 
-def query(engine, text, num_completions):
-    headers = {"Authorization": "Bearer {API TOKEN}", "Content-Type": "application/json"}
+st.header('GPT3')
+def query(engine, text, api_token, num_completions):
+    headers = {"Authorization": "Bearer " + api_token, "Content-Type": "application/json"}
     for i in range(num_completions):
         response = requests.post("https://api.openai.com/v1/engines/"+ engine +"/completions",
             headers=headers,
@@ -65,7 +68,8 @@ def query(engine, text, num_completions):
         ).json()['choices']
         st.markdown(text + " **" + response[0]['text']  + "**")
 
+api_token = st.sidebar.text_input("OpenAI API token")
 text = st.text_input("Enter a prompt", "I really like")
-engine = st.sidebar.selectbox('Select engine', ['ada', 'babbage', 'curie', 'davinci'])
-num_completions = st.sidebar.slider("Number of completions", 1, 10, 1)
-query(engine, text, num_completions)
+engine = st.selectbox('Select engine', ['ada', 'babbage', 'curie', 'davinci'])
+num_completions = st.slider("Number of completions", 1, 10, 1)
+query(engine, text, api_token, num_completions)
